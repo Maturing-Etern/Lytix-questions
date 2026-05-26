@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lytix 审核测评 — f(x)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    /* Inline critical: hide FOUT on serif */
+    .hero-math, .hero-title, .success-icon, .success-title { font-family: 'Times New Roman', 'Noto Serif SC', serif; }
+  </style>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     MATH BACKGROUND SVG
+     ═══════════════════════════════════════════════════ -->
+<svg id="math-bg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="1.5"/></filter>
+  </defs>
+  <!-- Cartesian grid -->
+  <g stroke="rgba(255,255,255,0.06)" stroke-width="0.5">
+    <line x1="0" y1="450" x2="1440" y2="450"/>
+    <line x1="720" y1="0"  x2="720" y2="900"/>
+  </g>
+  <g stroke="rgba(255,255,255,0.03)" stroke-width="0.3">
+    <line x1="0" y1="150" x2="1440" y2="150"/><line x1="0" y1="300" x2="1440" y2="300"/>
+    <line x1="0" y1="600" x2="1440" y2="600"/><line x1="0" y1="750" x2="1440" y2="750"/>
+    <line x1="360" y1="0" x2="360" y2="900"/><line x1="1080" y1="0" x2="1080" y2="900"/>
+  </g>
+  <!-- Sine wave  f(x)=A·sin(kx+φ) -->
+  <path d="M0,450 Q90,350 180,450 T360,450 T540,450 T720,450 T900,450 T1080,450 T1260,450 T1440,450"
+        fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"/>
+  <!-- Tangent-like curves -->
+  <path d="M180,900 Q360,300 540,450 T900,0"
+        fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="0.6"/>
+  <path d="M900,900 Q1080,600 1260,450 T1440,900"
+        fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="0.6"/>
+  <!-- Logistic / sigmoid -->
+  <path d="M0,750 Q180,700 360,650 T540,450 T720,250 T900,150 T1080,100 T1260,80 T1440,70"
+        fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/>
+  <!-- Damped oscillation -->
+  <path d="M0,600 Q60,500 120,560 T240,540 T360,530 T480,520 T600,510 T720,505 T900,500"
+        fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+</svg>
+
+<!-- ── Toast ─── -->
+<div id="toast-container"></div>
+
+<!-- ── Progress ── -->
+<div id="progress-bar" class="progress-bar-wrap">
+  <div class="progress-bar-inner">
+    <span class="progress-text" id="progress-text">进度 = 0</span>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- ═══════════════════════════ STEP 1 · POSITION SELECTION ═══════════════════════════ -->
+  <section id="position-select">
+    <div class="container">
+      <div class="hero">
+        <div class="hero-math">f(x)</div>
+        <h1 class="hero-title">Lytix 审核测评</h1>
+        <p class="hero-label">公开选拔 · 2026</p>
+        <div class="hero-rule"></div>
+        <p class="hero-desc">
+          欢迎参加 Lytix 团队成员公开选拔。<br/>
+          请选择您报名的岗位 —— <span class="fn">f<sub>画师</sub></span>,
+          <span class="fn">f<sub>剧情</sub></span>, <span class="fn">f<sub>曲师</sub></span>,
+          <span class="fn">f<sub>谱师</sub></span>, <span class="fn">f<sub>PV</sub></span> ——
+          并完成测评题目。提交后数据将发送至审核邮箱。
+        </p>
+      </div>
+
+      <p class="section-label">选择岗位</p>
+
+      <div class="position-grid" id="position-grid">
+        <!-- JS rendered -->
+      </div>
+
+      <button class="start-btn" id="start-btn" disabled onclick="startQuiz()">
+        开始答题
+      </button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ STEP 2 · FORM ═══════════════════════════ -->
+  <section id="quiz-form">
+    <div class="container">
+
+      <div class="form-header">
+        <span class="form-pos-badge" id="form-pos-badge"></span>
+        <span class="form-title">岗位测评问卷</span>
+      </div>
+
+      <div class="form-intro" id="form-intro"></div>
+
+      <!-- Applicant Info -->
+      <div class="info-section">
+        <div class="q-section-title">§ 申请人信息</div>
+        <div class="info-grid">
+          <div class="question-item">
+            <label class="q-label" for="info-name">
+              姓名 / 别名 <span class="q-required">*</span>
+            </label>
+            <input class="form-input" id="info-name" type="text"
+                   placeholder="您的常用名或别名" oninput="updateProgress()" />
+          </div>
+          <div class="question-item">
+            <label class="q-label" for="info-contact">
+              联系方式 <span class="q-required">*</span>
+            </label>
+            <input class="form-input" id="info-contact" type="text"
+                   placeholder="QQ / 微信 / 邮箱" oninput="updateProgress()" />
+          </div>
+          <div class="question-item" style="grid-column:1/-1">
+            <label class="q-label" for="info-remark">备注说明</label>
+            <input class="form-input" id="info-remark" type="text"
+                   placeholder="其他补充说明（选填）" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic questions container -->
+      <div id="questions-container"></div>
+
+      <!-- Submit -->
+      <div class="submit-section">
+        <p>
+          请确认所有必填项（<span style="color:#f44">*</span>）均已填写完毕。<br/>
+          提交后数据将发送至审核邮箱，无需手动转发。
+        </p>
+        <button class="submit-btn" id="submit-btn" onclick="onSubmit()">
+          <span class="spinner"></span> 提交测评
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ STEP 3 · SUCCESS ═══════════════════════════ -->
+  <section id="success-page">
+    <div class="container">
+      <div class="success-icon">∫</div>
+      <h2 class="success-title">提交成功</h2>
+      <p class="success-sub">
+        您的测评数据已发送至审核邮箱。<br/>
+        审核组将在 <strong>7 个工作日内</strong> 通过您留下的联系方式反馈结果。
+      </p>
+      <button class="success-back" onclick="resetToStart()">← 返回首页</button>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <p>lytix.staff.audition / v1.0 / 2026 / 保留所有权利</p>
+  </footer>
+
+</div>
+
+<!-- ── SCRIPTS ──────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="questions.js"></script>
+<script src="submit.js"></script>
+<script>
+"use strict";
+
+// ── State ─────────────────────────────────────────────
+let currentPosition = null;
+const FILE_MAP = {};
+
+// ── Init position grid ────────────────────────────────
+(function initPositionGrid() {
+  const grid = document.getElementById("position-grid");
+  POSITIONS.forEach(pos => {
+    const card = document.createElement("div");
+    card.className = "pos-card";
+    card.dataset.id = pos.id;
+    card.innerHTML = `
+      <span class="pos-symbol">${pos.symbol}</span>
+      <div class="pos-label">${pos.label}</div>
+    `;
+    card.addEventListener("click", () => selectPosition(pos.id));
+    grid.appendChild(card);
+  });
+})();
+
+function selectPosition(id) {
+  currentPosition = id;
+  document.querySelectorAll(".pos-card").forEach(c => {
+    c.classList.toggle("active", c.dataset.id === id);
+  });
+  document.getElementById("start-btn").disabled = false;
+}
+
+// ── Start quiz ────────────────────────────────────────
+function startQuiz() {
+  if (!currentPosition) return;
+  const pos = POSITIONS.find(p => p.id === currentPosition);
+  const qs = QUESTIONS[currentPosition];
+  if (!qs) { showToast("题目数据加载失败", "error"); return; }
+
+  Object.keys(FILE_MAP).forEach(k => delete FILE_MAP[k]);
+
+  const badge = document.getElementById("form-pos-badge");
+  badge.textContent = pos.symbol;
+
+  document.getElementById("form-intro").textContent = qs.intro;
+
+  renderQuestions(currentPosition, qs);
+
+  document.getElementById("position-select").style.display = "none";
+  document.getElementById("quiz-form").style.display = "block";
+  document.getElementById("progress-bar").style.display = "block";
+  document.getElementById("quiz-form").classList.add("fade-in-up");
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  updateProgress();
+}
+
+// ── Render ────────────────────────────────────────────
+function renderQuestions(posId, questions) {
+  const container = document.getElementById("questions-container");
+  container.innerHTML = "";
+
+  questions.sections.forEach((section, si) => {
+    const sec = document.createElement("div");
+    sec.className = "q-section fade-in-up";
+    const title = document.createElement("div");
+    title.className = "q-section-title";
+    title.textContent = `§ ${section.title}`;
+    sec.appendChild(title);
+    section.questions.forEach(q => sec.appendChild(renderQuestion(q)));
+    container.appendChild(sec);
+  });
+}
+
+function renderQuestion(q) {
+  const wrap = document.createElement("div");
+  wrap.className = "question-item";
+  wrap.dataset.qid = q.id;
+
+  const label = document.createElement("div");
+  label.className = "q-label";
+  label.innerHTML = `${q.text}${q.required ? '<span class="q-required">*</span>' : ''}`;
+  wrap.appendChild(label);
+
+  switch (q.type) {
+    case "radio":    wrap.appendChild(renderRadio(q)); break;
+    case "checkbox": wrap.appendChild(renderCheckbox(q)); break;
+    case "textarea": wrap.appendChild(renderTextarea(q)); break;
+    case "input":    wrap.appendChild(renderInput(q)); break;
+    case "upload":   wrap.appendChild(renderUpload(q)); break;
+  }
+
+  if (q.hint) {
+    const hint = document.createElement("div");
+    hint.className = "q-hint";
+    hint.textContent = q.hint;
+    wrap.appendChild(hint);
+  }
+  return wrap;
+}
+
+function renderRadio(q) {
+  const group = document.createElement("div");
+  group.className = "radio-group";
+  q.options.forEach(opt => {
+    const item = document.createElement("label");
+    item.className = "radio-item";
+    item.innerHTML = `<input type="radio" name="${q.id}" value="${opt}"><span class="radio-dot"></span><span>${opt}</span>`;
+    item.querySelector("input").addEventListener("change", () => {
+      document.querySelectorAll(`[name="${q.id}"]`).forEach(inp => {
+        inp.closest(".radio-item")?.classList.toggle("selected", inp.checked);
+      });
+      updateProgress();
+    });
+    group.appendChild(item);
+  });
+  return group;
+}
+
+function renderCheckbox(q) {
+  const group = document.createElement("div");
+  group.className = "checkbox-group";
+  q.options.forEach(opt => {
+    const item = document.createElement("label");
+    item.className = "checkbox-item";
+    item.innerHTML = `<input type="checkbox" name="${q.id}" value="${opt}"><span class="check-box"></span><span>${opt}</span>`;
+    item.querySelector("input").addEventListener("change", function() {
+      item.classList.toggle("selected", this.checked);
+      updateProgress();
+    });
+    group.appendChild(item);
+  });
+  return group;
+}
+
+function renderTextarea(q) {
+  const ta = document.createElement("textarea");
+  ta.className = "form-textarea"; ta.id = q.id;
+  ta.placeholder = q.placeholder || "";
+  ta.addEventListener("input", updateProgress);
+  return ta;
+}
+
+function renderInput(q) {
+  const inp = document.createElement("input");
+  inp.type = "text"; inp.className = "form-input"; inp.id = q.id;
+  inp.placeholder = q.placeholder || "";
+  inp.addEventListener("input", updateProgress);
+  return inp;
+}
+
+function renderUpload(q) {
+  FILE_MAP[q.id] = [];
+  const zone = document.createElement("div");
+  zone.className = "upload-zone";
+  zone.innerHTML = `<div class="upload-icon">[ 上传 ]</div><div class="upload-text">点击或拖拽文件到此区域</div><div class="upload-hint">${getUploadHintText(q)}</div>`;
+
+  const input = document.createElement("input");
+  input.type = "file"; input.accept = q.accept || "*";
+  if (q.multiple) input.multiple = true;
+
+  const fileList = document.createElement("div");
+  fileList.className = "file-list";
+
+  function refreshFileList() {
+    fileList.innerHTML = "";
+    FILE_MAP[q.id].forEach((file, idx) => {
+      const item = document.createElement("div");
+      item.className = "file-item";
+      item.innerHTML = `<span class="file-item-name" title="${file.name}">${file.name}</span><span class="file-item-size">${formatFileSize(file.size)}</span><button class="file-remove">×</button>`;
+      item.querySelector(".file-remove").addEventListener("click", () => {
+        FILE_MAP[q.id].splice(idx, 1); refreshFileList(); updateProgress();
+      });
+      fileList.appendChild(item);
+    });
+  }
+
+  input.addEventListener("change", () => {
+    const newFiles = Array.from(input.files || []);
+    if (!q.multiple) FILE_MAP[q.id] = newFiles.slice(0, 1);
+    else FILE_MAP[q.id] = [...FILE_MAP[q.id], ...newFiles].slice(0, 3);
+    FILE_MAP[q.id] = FILE_MAP[q.id].filter(f => {
+      if (f.size > CONFIG.maxFileSize) { showToast(`文件 ${f.name} 超过大小限制`, "warning"); return false; }
+      return true;
+    });
+    refreshFileList(); updateProgress(); input.value = "";
+  });
+
+  zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+  zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+  zone.addEventListener("drop", e => {
+    e.preventDefault(); zone.classList.remove("drag-over");
+    input.files = e.dataTransfer.files; input.dispatchEvent(new Event("change"));
+  });
+
+  zone.appendChild(input);
+  const wrapper = document.createElement("div");
+  wrapper.appendChild(zone); wrapper.appendChild(fileList);
+  return wrapper;
+}
+
+function getUploadHintText(q) {
+  const parts = [];
+  if (q.accept) parts.push(`格式：${q.accept.split(",").map(s => s.trim()).join(", ")}`);
+  parts.push(`上限：${Math.round(CONFIG.maxFileSize/(1024*1024))} MB`);
+  if (q.multiple) parts.push("最多 3 个文件");
+  return parts.join("  |  ");
+}
+
+// ── Progress ──────────────────────────────────────────
+function updateProgress() {
+  if (!currentPosition) return;
+  const pct = calcProgress(currentPosition);
+  const qs = QUESTIONS[currentPosition];
+  let total = 2, filled = 0;
+  if (qs) qs.sections.forEach(s => s.questions.forEach(q => { if (q.required) total++; }));
+  filled = Math.round(pct / 100 * total);
+  document.getElementById("progress-fill").style.width = `${pct}%`;
+  document.getElementById("progress-text").textContent = `进度 = ${filled} / ${total}`;
+}
+
+// ── Submit ────────────────────────────────────────────
+function onSubmit() {
+  handleSubmit(currentPosition);
+}
+
+// ── Reset ─────────────────────────────────────────────
+function resetToStart() {
+  document.getElementById("success-page").style.display  = "none";
+  document.getElementById("quiz-form").style.display     = "none";
+  document.getElementById("progress-bar").style.display  = "none";
+  document.getElementById("position-select").style.display = "block";
+  document.querySelectorAll(".pos-card").forEach(c => c.classList.remove("active"));
+  document.getElementById("start-btn").disabled = true;
+  currentPosition = null;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+</script>
+
+</body>
+</html>
