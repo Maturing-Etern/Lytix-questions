@@ -78,25 +78,30 @@ function collectFormData(positionId, questions) {
       switch (q.type) {
         case "radio": {
           const sel = document.querySelector(`[name="${q.id}"]:checked`);
-          answer = sel ? sel.value : "（未选择）";
+          answer = sel ? sel.value : "";
+          data[q.id] = answer;
           break;
         }
         case "checkbox": {
           const sel = document.querySelectorAll(`[name="${q.id}"]:checked`);
-          answer = sel.length ? Array.from(sel).map(el => el.value).join("、") : "（未选择）";
+          const vals = sel.length ? Array.from(sel).map(el => el.value) : [];
+          data[q.id] = vals;
+          answer = vals.length ? vals.join("、") : "";
           break;
         }
         case "textarea":
         case "input": {
           const el = document.getElementById(q.id);
           answer = el ? el.value.trim() : "";
+          data[q.id] = answer;
           break;
         }
         case "upload": {
           const files = FILE_MAP[q.id] || [];
+          data[q.id] = files;
           answer = files.length
             ? files.map(f => `${f.name} (${formatFileSize(f.size)})`).join("；")
-            : "（未上传）";
+            : "";
           break;
         }
       }
@@ -104,6 +109,11 @@ function collectFormData(positionId, questions) {
     }
     data._answers.push(sec);
   }
+
+  // 补全邮件展示用的"未选择/未上传"文案（不影响校验）
+  data._answers.forEach(sec => {
+    sec.items = sec.items.map(a => a === "（未作答）" ? "（未作答）" : a);
+  });
 
   return data;
 }
