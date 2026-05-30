@@ -7,6 +7,7 @@ const POSITIONS = [
   { id: "composer",  label: "曲师",       symbol: "ω", color: "#ffffff" },
   { id: "charter",   label: "谱师",       symbol: "Δ", color: "#ffffff" },
   { id: "pv",        label: "PV制作员",   symbol: "γ", color: "#ffffff" },
+  { id: "dev",       label: "程序",       symbol: "Σ", color: "#ffffff" },
 ];
 
 // ─────────────────── 评分量表说明 ───────────────────
@@ -453,6 +454,111 @@ const QUESTIONS = {
             required: false,
             placeholder: "请简述合作经历及发布平台",
             text: "【选做】您是否有参与音游或音乐 PV 制作的合作经历？请简述。",
+          },
+        ],
+      },
+    ],
+  },
+
+  // ─── 程序 ─────────────────────────────────────────
+  dev: {
+    intro: "本测评考察报名者的游戏开发能力、技术栈掌握程度，以及对音游核心系统的理解与实现能力。",
+    sections: [
+      {
+        title: "基础能力自评",
+        questions: [
+          {
+            id: "d_exp",
+            type: "radio",
+            required: true,
+            text: "您的游戏开发经验年限？",
+            options: ["不足 1 年", "1–2 年", "2–4 年", "4 年以上"],
+          },
+          {
+            id: "d_lang",
+            type: "checkbox",
+            required: true,
+            text: "您熟练掌握的编程语言（可多选）",
+            options: ["C#", "C++", "Python", "JavaScript / TypeScript", "Lua", "其他"],
+          },
+          {
+            id: "d_engine",
+            type: "checkbox",
+            required: true,
+            text: "您有使用经验的游戏引擎/框架（可多选）",
+            options: ["Unity", "Unreal Engine", "Godot", "Cocos Creator", "自研引擎", "其他"],
+          },
+          {
+            id: "d_rhythm",
+            type: "radio",
+            required: true,
+            text: "您是否有音游相关系统的开发经验？",
+            options: ["有，独立开发过完整音游", "有，参与过音游项目某模块", "了解原理，未实际开发", "无相关经验"],
+          },
+        ],
+      },
+      {
+        title: "技术作品提交",
+        questions: [
+          {
+            id: "d_repo",
+            type: "input",
+            required: true,
+            placeholder: "如 GitHub / Gitee / GitLab 仓库链接",
+            text: "请提供一个您的代表性技术项目链接（仓库或可运行 Demo）",
+            hint: "可以是个人项目、开源贡献或团队项目；请确保链接可正常访问",
+          },
+          {
+            id: "d_repo_desc",
+            type: "textarea",
+            required: true,
+            placeholder: "请说明项目背景、您负责的模块、使用的技术栈及亮点",
+            text: "对上述项目进行简要说明",
+          },
+          {
+            id: "d_portfolio",
+            type: "input",
+            required: false,
+            placeholder: "如个人网站、itch.io、bilibili 等",
+            text: "【选做】其他作品集或展示链接",
+          },
+        ],
+      },
+      {
+        title: "命题设计",
+        questions: [
+          {
+            id: "d_judger",
+            type: "textarea",
+            required: true,
+            placeholder: "限 500 字以内，可使用伪代码或流程描述",
+            text: "【命题】请描述一套音游判定系统的核心设计思路，包括：音频同步、输入延迟补偿、判定窗口划分（Perfect / Good / Bad / Miss）的实现方案。",
+          },
+          {
+            id: "d_perf",
+            type: "textarea",
+            required: true,
+            placeholder: "请从渲染、内存、I/O 等角度分析",
+            text: "【命题】一首包含 1000+ note 的谱面在低端移动设备上出现掉帧，请分析可能的性能瓶颈并提出优化方案。",
+          },
+        ],
+      },
+      {
+        title: "开放问题",
+        questions: [
+          {
+            id: "d_collab",
+            type: "radio",
+            required: true,
+            text: "您是否有与非技术岗位（美术/策划/音乐）协作开发的经历？",
+            options: ["有，长期稳定合作", "有，偶尔参与", "没有，但有意愿", "没有相关经历"],
+          },
+          {
+            id: "d_schedule",
+            type: "textarea",
+            required: false,
+            placeholder: "请估算可投入时间及擅长的协作方式",
+            text: "【选做】请说明您每周可投入项目的时间，以及您偏好的远程协作方式。",
           },
         ],
       },
